@@ -191,12 +191,3 @@ class Tensor:
         self.grad = np.ones_like(self.data)
         for node in reversed(topo):
             node._backward()
-
-
-a = Tensor(np.array([2.0, 3.0]), _label='a')
-b = Tensor(np.array([4.0, 5.0]), _label='b')
-c = a * b; c._label = 'c'
-d = c * 5; d._label = 'd'
-
-d.backward()
-draw_graph(d)
