@@ -1,10 +1,10 @@
-import math
+import numpy as np
 from pathlib import Path
 import graphviz
 
 # Based heavily on Andrej Karpathy's tutorial: https://www.youtube.com/watch?v=VMj-3S1tku0
 
-def _trace(root: "Value") -> tuple[set, set]:
+def _trace(root: "Tensor") -> tuple[set, set]:
     nodes: set = set()
     edges: set = set()
 
@@ -19,7 +19,7 @@ def _trace(root: "Value") -> tuple[set, set]:
     return nodes, edges
 
 
-def draw_graph(root: "Value", filename: str | Path | None = "graph") -> graphviz.Digraph:
+def draw_graph(root: "Tensor", filename: str | Path | None = "graph") -> graphviz.Digraph:
     nodes, edges = _trace(root)
     dot = graphviz.Digraph(
         format="svg",
@@ -29,7 +29,7 @@ def draw_graph(root: "Value", filename: str | Path | None = "graph") -> graphviz
 
     for n in nodes:
         uid = str(id(n))
-        label = "{ %s | data %.4f | grad %.4f }" % (n._label, n.data, n.grad)
+        label = "{ %s | shape %s | grad %s }" % (n._label, n.data.shape, np.array2string(np.asarray(n.grad), precision=4))
         dot.node(uid, label=label, shape="record", style="filled", fillcolor="#e8f4fc")
         if n._op:
             op_id = uid + n._op
@@ -37,7 +37,7 @@ def draw_graph(root: "Value", filename: str | Path | None = "graph") -> graphviz
             dot.edge(op_id, uid)
 
     for n1, n2 in edges:
-        # n1 is the output value; n2 is one of its inputs — wire input → op → output
+        # n1 is the output Tensor; n2 is one of its inputs — wire input → op → output
         op_id = str(id(n1)) + n1._op
         dot.edge(str(id(n2)), op_id)
 
@@ -47,9 +47,9 @@ def draw_graph(root: "Value", filename: str | Path | None = "graph") -> graphviz
     return dot
 
 
-class Value:
+class Tensor:
     def __init__(self, data, _children=(), _op='', _label=''):
-        self.data = float(data)
+        self.data = np.asarray(data, dtype=float)
         self._children = set(_children)
         self._op = _op
         self._label = _label
@@ -57,15 +57,15 @@ class Value:
         self.grad = 0.0
 
     def __repr__(self):
-        return f"Value(data={self.data}, grad={self.grad}, op='{self._op}', label='{self._label}')"
+        return f"Tensor(data={self.data}, grad={self.grad}, op='{self._op}', label='{self._label}')"
 
     # ------------------------------------------------------------------
     # Core ops
     # ------------------------------------------------------------------
 
     def __add__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data + other.data, (self, other), '+')
+        other = other if isinstance(other, Tensor) else Tensor(other)
+        out = Tensor(self.data + other.data, (self, other), '+')
 
         def _backward():
             self.grad += out.grad
@@ -75,8 +75,8 @@ class Value:
         return out
 
     def __mul__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data * other.data, (self, other), '*')
+        other = other if isinstance(other, Tensor) else Tensor(other)
+        out = Tensor(self.data * other.data, (self, other), '*')
 
         def _backward():
             self.grad += other.data * out.grad
@@ -87,7 +87,7 @@ class Value:
 
     def __pow__(self, other):
         assert isinstance(other, (int, float)), "__pow__ only supports scalar exponents"
-        out = Value(self.data ** other, (self,), f'**{other}')
+        out = Tensor(self.data ** other, (self,), f'**{other}')
 
         def _backward():
             self.grad += other * (self.data ** (other - 1)) * out.grad
@@ -105,7 +105,7 @@ class Value:
         return self + (-other)
 
     # ------------------------------------------------------------------
-    # Right-hand variants (e.g. 2 + Value, 3 * Value)
+    # Right-hand variants (e.g. 2 + Tensor, 3 * Tensor)
     # ------------------------------------------------------------------
 
     def __radd__(self, other):
@@ -115,17 +115,17 @@ class Value:
         return self * other
 
     def __rsub__(self, other):
-        return Value(other) + (-self)
+        return Tensor(other) + (-self)
 
     def __rtruediv__(self, other):
-        return Value(other) * self ** -1
+        return Tensor(other) * self ** -1
 
     # ------------------------------------------------------------------
     # Activations / transcendentals
     # ------------------------------------------------------------------
 
     def exp(self):
-        out = Value(math.exp(self.data), (self,), 'exp')
+        out = Tensor(np.exp(self.data), (self,), 'exp')
 
         def _backward():
             self.grad += out.data * out.grad  # d/dx e^x = e^x
@@ -134,8 +134,8 @@ class Value:
         return out
 
     def log(self):
-        assert self.data > 0, "log is only defined for positive values"
-        out = Value(math.log(self.data), (self,), 'log')
+        assert np.all(self.data > 0), "log is only defined for positive Tensors"
+        out = Tensor(np.log(self.data), (self,), 'log')
 
         def _backward():
             self.grad += (1.0 / self.data) * out.grad
@@ -144,7 +144,7 @@ class Value:
         return out
 
     def relu(self):
-        out = Value(max(0.0, self.data), (self,), 'relu')
+        out = Tensor(np.maximum(0.0, self.data), (self,), 'relu')
 
         def _backward():
             self.grad += (out.data > 0) * out.grad
@@ -153,8 +153,8 @@ class Value:
         return out
 
     def tanh(self):
-        t = math.tanh(self.data)
-        out = Value(t, (self,), 'tanh')
+        t = np.tanh(self.data)
+        out = Tensor(t, (self,), 'tanh')
 
         def _backward():
             self.grad += (1.0 - t ** 2) * out.grad
@@ -163,8 +163,8 @@ class Value:
         return out
 
     def sigmoid(self):
-        s = 1.0 / (1.0 + math.exp(-self.data))
-        out = Value(s, (self,), 'sigmoid')
+        s = 1.0 / (1.0 + np.exp(-self.data))
+        out = Tensor(s, (self,), 'sigmoid')
 
         def _backward():
             self.grad += s * (1.0 - s) * out.grad
@@ -177,10 +177,10 @@ class Value:
     # ------------------------------------------------------------------
 
     def backward(self):
-        topo: list[Value] = []
-        visited: set[Value] = set()
+        topo: list[Tensor] = []
+        visited: set[Tensor] = set()
 
-        def build_topo(v: Value):
+        def build_topo(v: Tensor):
             if v not in visited:
                 visited.add(v)
                 for child in v._children:
@@ -188,14 +188,13 @@ class Value:
                 topo.append(v)
 
         build_topo(self)
-        print(topo)
-        self.grad = 1.0
+        self.grad = np.ones_like(self.data)
         for node in reversed(topo):
             node._backward()
 
 
-a = Value(2.0, _label='a')
-b = Value(3.0, _label='b')
+a = Tensor(np.array([2.0, 3.0]), _label='a')
+b = Tensor(np.array([4.0, 5.0]), _label='b')
 c = a * b; c._label = 'c'
 d = c * 5; d._label = 'd'
 
