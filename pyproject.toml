@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "matplotlib>=3.10.8",
+    "scipy-openblas32>=0.3.31.188.0",
     "torch>=2.11.0",
     "zbtorch",
 ]
@@ -21,3 +22,8 @@ zbtorch = { workspace = true }
 name = "pytorch-cu130"
 url = "https://download.pytorch.org/whl/cu130"
 explicit = true
+
+[dependency-groups]
+dev = [
+    "pybind11>=3.0.3",
+]

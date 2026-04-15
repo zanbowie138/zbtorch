@@ -523,6 +523,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pybind11"
+version = "3.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/50/b83d65efc1914681f5aded4ce37c703408a9bb74829f27f041560ca52ffb/pybind11-3.0.3.tar.gz", hash = "sha256:00471cdb816882c484708bc5dde80815c8c11cea540ab2cc6410f5ddea434755", size = 587814, upload-time = "2026-03-31T23:42:06.481Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/87/99f21e9b20899d6dc1bf7544cfe53e5fa17acc21bb267971a540425357d3/pybind11-3.0.3-py3-none-any.whl", hash = "sha256:fb5f8e4a64946b4dcc0451c83a8c384f803bc0a62dd1ba02f199e97dbc9aad4c", size = 313717, upload-time = "2026-03-31T23:42:04.814Z" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.3.2"
 source = { registry = "https://pypi.org/simple" }
@@ -541,6 +550,26 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
+]
+
+[[package]]
+name = "scipy-openblas32"
+version = "0.3.31.188.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8c/b4/904cababffc58c2c3c98beab20cd0f418a0f0a2360c25dfca5e47704dbd2/scipy_openblas32-0.3.31.188.0-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:3074da34ce60d2bec73c0f3b8ddd5ff26f9cdbbe589f651a3207d2134962999c", size = 10346398, upload-time = "2026-03-21T20:11:33.662Z" },
+    { url = "https://files.pythonhosted.org/packages/de/5e/add6d72d772ba37912fed05b6bf9eab12170d6fe8da5035b58a956ac35b1/scipy_openblas32-0.3.31.188.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:a5df809a9bbc8605c8df5dc40aea409b0815d32a077704e83613d74ffbdf7725", size = 9788611, upload-time = "2026-03-21T20:11:35.749Z" },
+    { url = "https://files.pythonhosted.org/packages/80/70/3557afb797b322de2960a4747e0960888a45979000f4374a640e69f0b2a9/scipy_openblas32-0.3.31.188.0-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:630a0f1da08e498221dd74aed1c2e7d33acd0e9c953521ec9e364a4572ebadc1", size = 9497356, upload-time = "2026-03-21T20:11:37.932Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/94/c655249b1967cb96585ed578a26279afe441cbd60652d8a6baa9219c0c7b/scipy_openblas32-0.3.31.188.0-py3-none-manylinux2014_i686.manylinux_2_17_i686.whl", hash = "sha256:1bde5c557c0a09b81e05258c9744e249d0448a7d748ae6072f834d4d17f56b17", size = 7042360, upload-time = "2026-03-21T20:11:39.802Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/de/55bf402f290effbe67c7e75b0594dddd677349033bafbeeffb2fcf2c8962/scipy_openblas32-0.3.31.188.0-py3-none-manylinux2014_ppc64le.manylinux_2_17_ppc64le.whl", hash = "sha256:c6660b702ce31e46cb918180281dfb2e8162fe5c49bca8dff58013979cbca9a0", size = 9465232, upload-time = "2026-03-21T20:11:41.714Z" },
+    { url = "https://files.pythonhosted.org/packages/da/2e/54c0b8efdbe790f3437ed611d537ac7a4d9c7fa7fc0c4fcc7d0884c76862/scipy_openblas32-0.3.31.188.0-py3-none-manylinux2014_s390x.manylinux_2_17_s390x.whl", hash = "sha256:d4e6457c4c473626f3c386b80336b5c8a64505fbf849f5bc0998b0ec41347363", size = 6099350, upload-time = "2026-03-21T20:11:43.631Z" },
+    { url = "https://files.pythonhosted.org/packages/6f/8e/16aaf7f420206b4578b13f2b259567480757480829a775f8633912684760/scipy_openblas32-0.3.31.188.0-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:29534062c634a635c4d86b7f238541a81a39e457048ad3d717f54843530a0112", size = 8872077, upload-time = "2026-03-21T20:11:45.286Z" },
+    { url = "https://files.pythonhosted.org/packages/36/1f/956a46f107dac125ae328498a4c3ee3a1d4fcea66f4a5c087770eff162a8/scipy_openblas32-0.3.31.188.0-py3-none-manylinux_2_38_riscv64.manylinux_2_39_riscv64.whl", hash = "sha256:2f4908e5069c317c2ffb24979590c258da36ca69eabbbcd70d9ee8fe59d38c01", size = 5991968, upload-time = "2026-03-21T20:11:47.342Z" },
+    { url = "https://files.pythonhosted.org/packages/09/e6/1caa1d03e500cd2a0de31843881cb5925045001ae8865818d8887f01e0fc/scipy_openblas32-0.3.31.188.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:ba3102ba30f13fd1309cbfc1a1cce7b59972e587eda7b62cc95b4b7a5b870d70", size = 9775663, upload-time = "2026-03-21T20:11:49.203Z" },
+    { url = "https://files.pythonhosted.org/packages/14/8d/4fa80dcc6294c8505297cc038b6df0d93d4ced42dfabe05184beeab1cfe8/scipy_openblas32-0.3.31.188.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:054ebd4dfbbe6f4b99027a57e9dec2d04720c99dfc475f6d3a6cae3ef8972a6e", size = 9470867, upload-time = "2026-03-21T20:11:51.126Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/f0/4c35c677fa73f4951a47ea6900bbbc92756e4f0654f9c2809f7256445b71/scipy_openblas32-0.3.31.188.0-py3-none-win32.whl", hash = "sha256:a0729f6f891054a9d161e1ea4f525fff1fce83f8d7fa9e62411562f64f0fdd95", size = 5579839, upload-time = "2026-03-21T20:11:53.065Z" },
+    { url = "https://files.pythonhosted.org/packages/04/d1/ad6a03fa126d2729faa97f4fb7080789606ece5eac2113b67181fbfe6e44/scipy_openblas32-0.3.31.188.0-py3-none-win_amd64.whl", hash = "sha256:79dd91d61a9a70dad0596fba06a4efc7619561b825407703a5cf07911a1e63f8", size = 7100773, upload-time = "2026-03-21T20:11:54.586Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/14/bf812ab12f9f9097df16ab0fb6cbb376829be9bb5b8fd88600bb422dd8a3/scipy_openblas32-0.3.31.188.0-py3-none-win_arm64.whl", hash = "sha256:a49b9606b60bcca456339b0a8a823ec8f28bad77af8413c4a0188f10d2a8f6a6", size = 5095990, upload-time = "2026-03-21T20:11:56.567Z" },
 ]
 
 [[package]]
@@ -667,15 +696,25 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "matplotlib" },
+    { name = "scipy-openblas32" },
     { name = "torch", version = "2.11.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.11.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "zbtorch" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pybind11" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.8" },
+    { name = "scipy-openblas32", specifier = ">=0.3.31.188.0" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.11.0" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.11.0", index = "https://download.pytorch.org/whl/cu130" },
     { name = "zbtorch", editable = "zbtorch" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pybind11", specifier = ">=3.0.3" }]

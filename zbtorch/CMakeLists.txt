@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.5...4.0)
+cmake_minimum_required(VERSION 3.15...4.0)
 
 project(zbtorch_ext LANGUAGES CXX)
+
+# Find Dependencies (e.g., via vcpkg)
+find_package(OpenBLAS CONFIG REQUIRED)
 
 option(ZBTORCH_USE_CUDA "Build CUDA kernels" OFF)
 

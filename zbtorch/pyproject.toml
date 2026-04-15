@@ -18,5 +18,5 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 editable.mode = "redirect"
-editable.rebuild = true
+editable.rebuild = false
 build-dir = "build/{wheel_tag}"

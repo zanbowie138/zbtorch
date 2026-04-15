@@ -48,13 +48,14 @@ def draw_graph(root: "Tensor", filename: str | Path | None = "graph") -> graphvi
 
 
 class Tensor:
-    def __init__(self, data, _children=(), _op='', _label=''):
+    def __init__(self, data, _children=(), _op='', _label='', device="cpu"):
         self.data = np.asarray(data, dtype=float)
         self._children = set(_children)
         self._op = _op
         self._label = _label
         self._backward = lambda: None
         self.grad = 0.0
+        self.device = device
 
     def __repr__(self):
         return f"Tensor(data={self.data}, grad={self.grad}, op='{self._op}', label='{self._label}')"
