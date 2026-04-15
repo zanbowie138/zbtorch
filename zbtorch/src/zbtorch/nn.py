@@ -1,5 +1,5 @@
 import numpy as np
-from .tensor import Tensor
+from zbtorch._C import Tensor
 
 
 class Neuron:
@@ -14,6 +14,10 @@ class Neuron:
     def parameters(self) -> list[Tensor]:
         return self.w + [self.b]
 
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = [0.0] * len(p.data)
+
 
 class Layer:
     def __init__(self, n_inputs: int, n_outputs: int):
@@ -24,6 +28,10 @@ class Layer:
 
     def parameters(self) -> list[Tensor]:
         return [p for n in self.neurons for p in n.parameters()]
+
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = [0.0] * len(p.data)
 
 
 class MLP:
@@ -39,3 +47,7 @@ class MLP:
 
     def parameters(self) -> list[Tensor]:
         return [p for layer in self.layers for p in layer.parameters()]
+
+    def zero_grad(self):
+        for p in self.parameters():
+            p.grad = [0.0] * len(p.data)

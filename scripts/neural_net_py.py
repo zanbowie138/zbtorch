@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pathlib import Path
-from zbtorch import Tensor, MLP
+from zbtorch_py import Tensor, MLP
 
 _DIR = Path(__file__).parent
 
@@ -41,22 +41,23 @@ for step in range(STEPS):
     loss.backward()
     backward_times.append(time.perf_counter() - t_bwd)
 
+    # zbtorch_py: p.data is numpy — no .tolist() conversion needed
     for p in model.parameters():
-        p.data = (np.asarray(p.data) - LR * np.asarray(p.grad)).tolist()
+        p.data = p.data - LR * np.asarray(p.grad)
 
     step_times.append(time.perf_counter() - t_step)
 
-    loss_val = loss.data[0]
-    loss_history.append(loss_val)
+    # zbtorch_py: p.data is a 0-d numpy array — use float() to extract scalar
+    loss_history.append(float(loss.data))
     for i, pred in enumerate(preds):
-        pred_history[i].append(pred.data[0])
+        pred_history[i].append(float(pred.data))
 
 total_ms = sum(step_times) * 1000
 avg_ms   = np.mean(step_times) * 1000
 fwd_ms   = np.mean(forward_times) * 1000
 bwd_ms   = np.mean(backward_times) * 1000
 print(f"\n{'='*52}")
-print(f"  Benchmark  (zbtorch C++ backend, {STEPS} steps)")
+print(f"  Benchmark  (zbtorch_py pure Python, {STEPS} steps)")
 print(f"{'='*52}")
 print(f"  Total training time : {total_ms:>8.2f} ms")
 print(f"  Avg step time       : {avg_ms:>8.3f} ms")
@@ -73,7 +74,7 @@ grid_preds = np.zeros((res, res))
 for i in range(res):
     for j in range(res):
         val = model([gx[i, j], gy[i, j]])[0]
-        grid_preds[i, j] = val.data[0]
+        grid_preds[i, j] = float(val.data)
 
 
 # ── Plot ───────────────────────────────────────────────────────────────────────
@@ -162,9 +163,9 @@ for i, (t, p) in enumerate(zip(ys, final_preds)):
              color=TEXT_COL, fontsize=8)
 legend4 = ax4.legend(fontsize=8, framealpha=0.3, facecolor=DARK_BG, labelcolor=TEXT_COL)
 
-fig.suptitle("XOR  ·  MLP 2→4→4→1  ·  tanh activations  ·  MSE + SGD",
+fig.suptitle("XOR  ·  MLP 2→4→4→1  ·  tanh activations  ·  MSE + SGD  ·  pure Python",
              color=TEXT_COL, fontsize=13, y=0.98)
 
-plt.savefig(_DIR / "neural_net_training.png", dpi=150, bbox_inches="tight",
+plt.savefig(_DIR / "neural_net_py_training.png", dpi=150, bbox_inches="tight",
             facecolor=fig.get_facecolor())
 plt.show()

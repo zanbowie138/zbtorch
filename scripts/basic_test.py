@@ -1,10 +1,10 @@
 import numpy as np
-from zbtorch_py import Tensor, MLP, draw_graph
+from zbtorch import Tensor, MLP, draw_graph
 
-a = Tensor(np.array([5.0]), _label="a")
-b = Tensor(np.array([6.0]), _label="b")
+a = Tensor(5.0, label="a")
+b = Tensor(6.0, label="b")
 c = a * b; c._label = "c"
-d = c + 5; d._label = "d"
+d = c + Tensor(5.0); d._label = "d"
 
 
 d.backward()

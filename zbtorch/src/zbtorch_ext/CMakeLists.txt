@@ -14,3 +14,6 @@ install(TARGETS _C
     LIBRARY DESTINATION zbtorch
     RUNTIME DESTINATION zbtorch   # Windows .pyd lands here
 )
+
+# On Windows, copy DLL dependencies (e.g. openblas.dll) alongside the extension
+install(FILES $<TARGET_RUNTIME_DLLS:_C> DESTINATION zbtorch)
