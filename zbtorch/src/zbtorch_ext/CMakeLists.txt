@@ -2,6 +2,7 @@ add_library(zbtorch_core STATIC core/tensor.cpp
         include/zbtorch_ext/tensor.h)
 
 target_include_directories(zbtorch_core PUBLIC include)
+target_link_libraries(zbtorch_core PUBLIC OpenBLAS::OpenBLAS)
 
 add_executable(zbtorch_standalone test/test.cpp)
 target_link_libraries(zbtorch_standalone PRIVATE zbtorch_core)
