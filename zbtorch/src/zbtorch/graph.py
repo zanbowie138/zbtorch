@@ -1,25 +1,26 @@
 import numpy as np
 from pathlib import Path
 import graphviz
+from zbtorch_ext import build_topo
 
 
-def _trace(root) -> tuple[set, set]:
-    nodes: set = set()
-    edges: set = set()
-
-    def build(v):
-        if v not in nodes:
-            nodes.add(v)
-            for child in v._children:
-                edges.add((v, child))
-                build(child)
-
-    build(root)
-    return nodes, edges
+# def _trace(root) -> tuple[set, set]:
+#     nodes: set = set()
+#     edges: set = set()
+#
+#     def build(v):
+#         if v not in nodes:
+#             nodes.add(v)
+#             for child in v._children:
+#                 edges.add((v, child))
+#                 build(child)
+#
+#     build(root)
+#     return nodes, edges
 
 
 def draw_graph(root, filename: str | Path | None = "graph") -> graphviz.Digraph:
-    nodes, edges = _trace(root)
+    nodes = build_topo(root)
     dot = graphviz.Digraph(
         format="svg",
         graph_attr={"rankdir": "LR"},

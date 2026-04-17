@@ -1,9 +1,10 @@
-import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pathlib import Path
-from zbtorch import Tensor, MLP
+from zbtorch_py import Tensor, MLP
+from test_utils import (DARK_BG, GRID_COL, TEXT_COL, ACCENT,
+                        style_ax, scalar, build_grid, print_benchmark, train_loop)
 
 _DIR = Path(__file__).parent
 
@@ -12,87 +13,34 @@ _DIR = Path(__file__).parent
 xs = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 ys = [0.0, 1.0, 1.0, 0.0]
 labels = ["(0,0)→0", "(0,1)→1", "(1,0)→1", "(1,1)→0"]
-colors = ["#e74c3c", "#2ecc71", "#2ecc71", "#e74c3c"]  # red=0, green=1
 
 np.random.seed(42)
 model = MLP(2, [4, 4, 1])
 
 STEPS = 200
-LR = 0.1
+LR    = 0.01
 
-loss_history = []
 pred_history = [[] for _ in range(len(xs))]
 
-step_times = []
-forward_times = []
-backward_times = []
-
-for step in range(STEPS):
-    t_step = time.perf_counter()
-
-    t_fwd = time.perf_counter()
-    preds = [model(x)[0] for x in xs]
-    loss = sum(((p - Tensor(y)) ** 2 for p, y in zip(preds, ys)), Tensor(0.0))
-    forward_times.append(time.perf_counter() - t_fwd)
-
-    model.zero_grad()
-
-    t_bwd = time.perf_counter()
-    loss.backward()
-    backward_times.append(time.perf_counter() - t_bwd)
-
-    for p in model.parameters():
-        p.data = (np.asarray(p.data) - LR * np.asarray(p.grad)).tolist()
-
-    step_times.append(time.perf_counter() - t_step)
-
-    loss_val = loss.data[0]
-    loss_history.append(loss_val)
+def on_step(step, preds, train_loss):
     for i, pred in enumerate(preds):
-        pred_history[i].append(pred.data[0])
+        pred_history[i].append(scalar(pred))
 
-total_ms = sum(step_times) * 1000
-avg_ms   = np.mean(step_times) * 1000
-fwd_ms   = np.mean(forward_times) * 1000
-bwd_ms   = np.mean(backward_times) * 1000
-print(f"\n{'='*52}")
-print(f"  Benchmark  (zbtorch C++ backend, {STEPS} steps)")
-print(f"{'='*52}")
-print(f"  Total training time : {total_ms:>8.2f} ms")
-print(f"  Avg step time       : {avg_ms:>8.3f} ms")
-print(f"  Min / Max step      : {min(step_times)*1000:>7.3f} / {max(step_times)*1000:.3f} ms")
-print(f"  Avg forward pass    : {fwd_ms:>8.3f} ms  ({fwd_ms/avg_ms*100:.1f}%)")
-print(f"  Avg backward pass   : {bwd_ms:>8.3f} ms  ({bwd_ms/avg_ms*100:.1f}%)")
-print(f"{'='*52}\n")
+loss_history, _, step_times, fwd_times, bwd_times = train_loop(
+    model, xs, ys, STEPS, LR, Tensor, on_step=on_step
+)
+
+print_benchmark("zbtorch_py pure Python", STEPS, step_times, fwd_times, bwd_times)
 
 
 # ── Build decision boundary grid ──────────────────────────────────────────────
-res = 200
-gx, gy = np.meshgrid(np.linspace(-0.3, 1.3, res), np.linspace(-0.3, 1.3, res))
-grid_preds = np.zeros((res, res))
-for i in range(res):
-    for j in range(res):
-        val = model([gx[i, j], gy[i, j]])[0]
-        grid_preds[i, j] = val.data[0]
+gx, gy, grid_preds = build_grid(model, -0.3, 1.3, -0.3, 1.3, res=200)
 
 
 # ── Plot ───────────────────────────────────────────────────────────────────────
 fig = plt.figure(figsize=(14, 10))
 fig.patch.set_facecolor("#1a1a2e")
 gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.38, wspace=0.32)
-
-DARK_BG  = "#16213e"
-GRID_COL = "#0f3460"
-TEXT_COL = "#e0e0e0"
-ACCENT   = "#e94560"
-
-def style_ax(ax, title):
-    ax.set_facecolor(DARK_BG)
-    ax.set_title(title, color=TEXT_COL, fontsize=12, pad=8)
-    ax.tick_params(colors=TEXT_COL, labelsize=9)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(GRID_COL)
-    ax.grid(color=GRID_COL, linewidth=0.6)
 
 
 # ── 1. Loss curve ──────────────────────────────────────────────────────────────
@@ -116,8 +64,7 @@ cb.set_label("Output", color=TEXT_COL, fontsize=8)
 
 xor_x = [p[0] for p in xs]
 xor_y_coord = [p[1] for p in xs]
-xor_targets = ys
-point_colors = ["#c0392b" if t == 0 else "#27ae60" for t in xor_targets]
+point_colors = ["#c0392b" if t == 0 else "#27ae60" for t in ys]
 ax2.scatter(xor_x, xor_y_coord, c=point_colors, s=120, zorder=5,
             edgecolors="white", linewidths=1.2)
 for (px, py), lbl in zip(xs, labels):
@@ -133,14 +80,13 @@ style_ax(ax3, "Prediction Trajectories per Sample")
 traj_colors = ["#e74c3c", "#2ecc71", "#3498db", "#f39c12"]
 for i, (hist, lbl, c) in enumerate(zip(pred_history, labels, traj_colors)):
     ax3.plot(hist, color=c, linewidth=1.6, label=lbl)
-    # dashed target line
     ax3.axhline(ys[i], color=c, linewidth=0.7, linestyle=":", alpha=0.5)
 ax3.set_xlabel("Step", color=TEXT_COL, fontsize=9)
 ax3.set_ylabel("Predicted value", color=TEXT_COL, fontsize=9)
 ax3.set_xlim(0, STEPS - 1)
 ax3.set_ylim(-0.1, 1.1)
-legend = ax3.legend(fontsize=8, framealpha=0.3, facecolor=DARK_BG,
-                    labelcolor=TEXT_COL, loc="center right")
+ax3.legend(fontsize=8, framealpha=0.3, facecolor=DARK_BG, labelcolor=TEXT_COL,
+           loc="center right")
 
 
 # ── 4. Final predictions vs targets ───────────────────────────────────────────
@@ -160,11 +106,11 @@ ax4.set_ylabel("Value", color=TEXT_COL, fontsize=9)
 for i, (t, p) in enumerate(zip(ys, final_preds)):
     ax4.text(i + bar_w / 2, p + 0.03, f"{p:.2f}", ha="center",
              color=TEXT_COL, fontsize=8)
-legend4 = ax4.legend(fontsize=8, framealpha=0.3, facecolor=DARK_BG, labelcolor=TEXT_COL)
+ax4.legend(fontsize=8, framealpha=0.3, facecolor=DARK_BG, labelcolor=TEXT_COL)
 
-fig.suptitle("XOR  ·  MLP 2→4→4→1  ·  tanh activations  ·  MSE + SGD",
+fig.suptitle("XOR  ·  MLP 2→4→4→1  ·  tanh activations  ·  MSE + SGD  ·  pure Python",
              color=TEXT_COL, fontsize=13, y=0.98)
 
-plt.savefig(_DIR / "neural_net_training.png", dpi=150, bbox_inches="tight",
-            facecolor=fig.get_facecolor())
+# plt.savefig(_DIR / "neural_net_py_training.png", dpi=150, bbox_inches="tight",
+#             facecolor=fig.get_facecolor())
 plt.show()

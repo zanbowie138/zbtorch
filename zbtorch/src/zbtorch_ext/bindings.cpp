@@ -2,6 +2,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 #include <zbtorch_ext/tensor.h>
+#include <zbtorch_ext/neuron.h>
 
 namespace py = pybind11;
 
@@ -35,9 +36,9 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def("__add__",      &Tensor::operator+)
         .def("__radd__",     [](std::shared_ptr<Tensor> t, float o) {
                                  return *std::make_shared<Tensor>(o) + *t; })
-        .def("__mul__",      &Tensor::operator*)
-        .def("__rmul__",     [](std::shared_ptr<Tensor> t, float o) {
-                                 return *std::make_shared<Tensor>(o) * *t; })
+        .def("__mul__",      py::overload_cast<const Tensor&>(&Tensor::operator*, py::const_))
+        .def("__mul__",      py::overload_cast<float>(&Tensor::operator*, py::const_))
+        .def("__rmul__",     [](const Tensor& t, float o) { return t * o; })
         .def("__neg__",      [](const Tensor& t) { return -t; })
         .def("__sub__",      py::overload_cast<const Tensor&>(&Tensor::operator-, py::const_))
         .def("__rsub__",     [](std::shared_ptr<Tensor> t, float o) {
@@ -54,8 +55,36 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def("relu",    &Tensor::relu)
         .def("tanh",    &Tensor::tanh)
         .def("sigmoid", &Tensor::sigmoid)
+        // Topology
+        .def("build_topo",    &Tensor::buildTopo, "Returns a list of the topology of this Tensor and it's children.")
         // Backprop
-        .def("backward", &Tensor::backward)
+        .def("backward", &Tensor::backward, py::arg("cache") = true)
         // Repr
         .def("__repr__", &Tensor::repr);
+
+    py::class_<Neuron>(m, "Neuron")
+        .def(py::init<int>(), py::arg("n_inputs"))
+        .def("__call__",   &Neuron::forward,    py::arg("x"))
+        .def("forward",    &Neuron::forward,    py::arg("x"))
+        .def("parameters", &Neuron::parameters)
+        .def("zero_grad",  &Neuron::zero_grad)
+        .def_readwrite("w", &Neuron::w)
+        .def_readwrite("b", &Neuron::b);
+
+    py::class_<Layer>(m, "Layer")
+        .def(py::init<int, int>(), py::arg("n_inputs"), py::arg("n_outputs"))
+        .def("__call__",   &Layer::forward,     py::arg("x"))
+        .def("forward",    &Layer::forward,     py::arg("x"))
+        .def("parameters", &Layer::parameters)
+        .def("zero_grad",  &Layer::zero_grad)
+        .def_readwrite("neurons", &Layer::neurons);
+
+    py::class_<MLP>(m, "MLP")
+        .def(py::init<int, std::vector<int>>(),
+             py::arg("n_inputs"), py::arg("layer_sizes"))
+        .def("__call__",   &MLP::forward,       py::arg("x"))
+        .def("forward",    &MLP::forward,       py::arg("x"))
+        .def("parameters", &MLP::parameters)
+        .def("zero_grad",  &MLP::zero_grad)
+        .def_readwrite("layers", &MLP::layers);
 }

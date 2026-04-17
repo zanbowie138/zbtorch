@@ -119,6 +119,20 @@ Tensor Tensor::operator*(const Tensor& other) const {
     return out;
 }
 
+Tensor Tensor::operator*(float scalar) const {
+    int n = static_cast<int>(data.size());
+    Tensor out = _make_output();
+    cblas_scopy(n, data.data(), 1, out.data.data(), 1);
+    cblas_sscal(n, scalar, out.data.data(), 1);
+    out._op = "*scalar";
+    auto self = const_cast<Tensor*>(this)->shared_from_this();
+    out._children = {self};
+    out._backward = [self, scalar, n](const std::vector<float>& g) {
+        cblas_saxpy(n, scalar, g.data(), 1, self->grad.data(), 1);
+    };
+    return out;
+}
+
 Tensor Tensor::operator-() const {
     int n = static_cast<int>(data.size());
     Tensor out = _make_output();
@@ -150,6 +164,7 @@ Tensor Tensor::operator-(const Tensor& other) const {
     return out;
 }
 
+// Elementwise division
 Tensor Tensor::operator/(const Tensor& other) const {
     check_same_shape(*this, other);
     int n = static_cast<int>(data.size());
@@ -316,14 +331,9 @@ Tensor Tensor::sigmoid() const {
     return out;
 }
 
-// ---------------------------------------------------------------------------
-// Backprop
-// ---------------------------------------------------------------------------
-
-void Tensor::backward() {
+std::vector<Tensor *> Tensor::buildTopo() {
     std::vector<Tensor*> topo;
-    std::unordered_set<Tensor*> visited;
-
+    std::unordered_set<const Tensor*> visited;
     std::function<void(Tensor*)> build_topo = [&](Tensor* v) {
         if (!visited.count(v)) {
             visited.insert(v);
@@ -332,11 +342,36 @@ void Tensor::backward() {
             topo.push_back(v);
         }
     };
-
     build_topo(this);
-    grad.assign(data.size(), 1.0f);
-    for (auto it = topo.rbegin(); it != topo.rend(); ++it)
-        (*it)->_backward((*it)->grad);
+    return topo;
+}
+
+// ---------------------------------------------------------------------------
+// Backprop
+// ---------------------------------------------------------------------------
+
+void Tensor::backward(bool cache) {
+    if (cache && !_cachedTopo.empty()) {
+        grad.assign(data.size(), 1.0f);
+
+        // Iterate backwards through node topology
+        for (auto it = _cachedTopo.rbegin(); it != _cachedTopo.rend(); ++it)
+            (*it)->_backward((*it)->grad);
+    }
+    else {
+        // Build topology
+        auto topo = buildTopo();
+        grad.assign(data.size(), 1.0f);
+
+        // Iterate backwards through topology
+        for (auto it = topo.rbegin(); it != topo.rend(); ++it)
+            (*it)->_backward((*it)->grad);
+
+        // Save topology for future calls (if cached flag)
+        if (cache) {
+            _cachedTopo = std::move(topo);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------

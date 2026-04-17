@@ -1,5 +1,8 @@
-add_library(zbtorch_core STATIC core/tensor.cpp
-        include/zbtorch_ext/tensor.h)
+add_library(zbtorch_core STATIC
+        core/tensor.cpp
+        include/zbtorch_ext/tensor.h
+        core/neuron.cpp
+        include/zbtorch_ext/neuron.h)
 
 target_include_directories(zbtorch_core PUBLIC include)
 target_link_libraries(zbtorch_core PUBLIC OpenBLAS::OpenBLAS)

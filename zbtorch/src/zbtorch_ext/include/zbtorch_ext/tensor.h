@@ -13,6 +13,7 @@ public:
     std::string _op;
     std::string _label;
     std::vector<std::shared_ptr<Tensor>> _children;
+    std::vector<Tensor*> _cachedTopo;
 
     // _backward receives this tensor's grad and propagates it to _children
     std::function<void(const std::vector<float>&)> _backward;
@@ -32,6 +33,7 @@ public:
     // Arithmetic operators
     Tensor operator+(const Tensor& other) const;
     Tensor operator*(const Tensor& other) const;
+    Tensor operator*(float scalar) const;
     Tensor operator-() const;
     Tensor operator-(const Tensor& other) const;
     Tensor operator/(const Tensor& other) const;
@@ -46,8 +48,10 @@ public:
     Tensor tanh() const;
     Tensor sigmoid() const;
 
-    // Backprop
-    void backward();
+    std::vector<Tensor *> buildTopo();
+
+    // Backpropogate and update gradients of self and children
+    void backward(bool cache = true);
 
     std::string repr() const;
 
