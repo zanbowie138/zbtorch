@@ -1,26 +1,75 @@
+#include <format>
+#include <ranges>
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <zbtorch_ext/tensor.h>
 #include <zbtorch_ext/neuron.h>
+#include <cuda_runtime.h>
 
 namespace py = pybind11;
 
 void runCudaTest();
 
+static Device parseDevice(py::object obj) {
+    auto s = py::str(obj).cast<std::string>();
+    for (auto [i, name] : std::views::enumerate(DEVICE_STRINGS))
+        if (s == name) return static_cast<Device>(i);
+    throw std::invalid_argument(
+        std::format("Unknown device: {}. Supported devices are: {}", s,
+            DEVICE_STRINGS | std::views::join_with(std::string_view(", ")) | std::ranges::to<std::string>())
+    );
+}
+
+static std::string_view getDeviceName(Device d) {
+    return DEVICE_STRINGS[static_cast<int>(d)];
+}
+
 PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
     m.doc() = "zbtorch C++ extension";
 
+    py::class_<Device>(m, "device")
+        .def(py::init([](py::object obj) { return parseDevice(obj); }), py::arg("type"))
+        .def_property_readonly("type", [](Device d) { return getDeviceName(d); })
+        .def("__str__",  [](Device d) { return getDeviceName(d); })
+        .def("__repr__", [](Device d) { return std::format("device('{}')", getDeviceName(d)); })
+        .def("__eq__",   [](Device d, py::object other) -> py::object {
+            if (py::isinstance<Device>(other))
+                return py::cast(d == other.cast<Device>());
+            if (py::isinstance<py::str>(other))
+                return py::cast(getDeviceName(d) == other.cast<std::string_view>());
+            return py::reinterpret_borrow<py::object>(Py_NotImplemented);
+        })
+        .def("__hash__", [](Device d) { return py::hash(py::str(getDeviceName(d))); });
+
     py::class_<Tensor, std::shared_ptr<Tensor>>(m, "Tensor")
-        .def(py::init<float, std::string>(),
-             py::arg("scalar"), py::arg("label") = "")
-        .def(py::init<std::vector<float>, std::vector<size_t>, std::string>(),
-             py::arg("data"), py::arg("shape"), py::arg("label") = "")
+        // Constructors
+        // scalar initializer
+        .def(py::init([](float scalar, py::object device, std::string label) {
+                return std::make_unique<Tensor>(scalar, parseDevice(device), label);
+             }), py::arg("scalar"), py::arg("device") = py::str("cpu"), py::arg("label") = "")
+        // numpy initializer
+        .def(py::init([](py::array_t<float, py::array::c_style | py::array::forcecast> arr,
+                         py::object device, std::string label) {
+                auto buf = arr.request();
+                std::vector<size_t> shape(buf.shape.begin(), buf.shape.end());
+                std::vector<float> data(static_cast<float*>(buf.ptr),
+                                        static_cast<float*>(buf.ptr) + buf.size);
+                return std::make_unique<Tensor>(data, shape, parseDevice(device), label);
+             }), py::arg("data"), py::arg("device") = py::str("cpu"), py::arg("label") = "")
+        // manual (vector, shape) initializer
+        .def(py::init([](std::vector<float> data, std::vector<size_t> shape,
+                         py::object device, std::string label) {
+                return std::make_unique<Tensor>(data, shape, parseDevice(device), label);
+             }), py::arg("data"), py::arg("shape"), py::arg("device") = py::str("cpu"), py::arg("label") = "")
+
         .def_readwrite("data", &Tensor::data)
         .def_readwrite("grad", &Tensor::grad)
         .def_readwrite("shape", &Tensor::shape)
         .def_readwrite("_op", &Tensor::_op)
         .def_readwrite("_label", &Tensor::_label)
+
         // Expose _children as a Python set of shared_ptr<Tensor>
         .def_property("_children",
             [](const Tensor& t) -> py::set {
@@ -57,6 +106,9 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def("relu",    &Tensor::relu)
         .def("tanh",    &Tensor::tanh)
         .def("sigmoid", &Tensor::sigmoid)
+        .def_property_readonly("device", [](const Tensor& t) { return t._device; })
+        .def("to",   [](const Tensor& t, py::object d) { Tensor r(t); r._device = parseDevice(d); return r; },
+             py::arg("device"))
         // Topology
         .def("build_topo",    &Tensor::buildTopo, "Returns a list of the topology of this Tensor and it's children.")
         // Backprop
@@ -91,4 +143,10 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def_readwrite("layers", &MLP::layers);
 
     m.def("cuda_test", &runCudaTest);
+
+    m.def("_cuda_is_available", []() {
+        int count = 0;
+        cudaGetDeviceCount(&count);
+        return count > 0;
+    });
 }

@@ -30,12 +30,12 @@ Tensor Tensor::_make_output() const {
 Tensor::Tensor()
     : _backward([](const std::vector<float>&) {}) {}
 
-Tensor::Tensor(float scalar, std::string label)
-    : data({scalar}), grad({0.0f}), shape({1}), _label(std::move(label)),
+Tensor::Tensor(float scalar, Device device, std::string label)
+    : data({scalar}), grad({0.0f}), shape({1}), _label(std::move(label)), _device(device),
       _backward([](const std::vector<float>&) {}) {}
 
-Tensor::Tensor(std::vector<float> d, std::vector<size_t> s, std::string label)
-    : data(std::move(d)), shape(std::move(s)), _label(std::move(label)),
+Tensor::Tensor(std::vector<float> d, std::vector<size_t> s, Device device, std::string label)
+    : data(std::move(d)), shape(std::move(s)), _label(std::move(label)), _device(device),
       _backward([](const std::vector<float>&) {}) {
     grad.assign(data.size(), 0.0f);
 }
@@ -47,7 +47,7 @@ Tensor::Tensor(std::vector<float> d, std::vector<size_t> s, std::string label)
 Tensor::Tensor(const Tensor& other)
     : data(other.data), grad(other.grad), shape(other.shape),
       _op(other._op), _label(other._label),
-      _children(other._children), _backward(other._backward) {}
+      _children(other._children), _backward(other._backward), _device(other._device) {}
 
 Tensor& Tensor::operator=(const Tensor& other) {
     if (this == &other) return *this;
@@ -58,13 +58,14 @@ Tensor& Tensor::operator=(const Tensor& other) {
     _label = other._label;
     _children = other._children;
     _backward = other._backward;
+    _device = other._device;
     return *this;
 }
 
 Tensor::Tensor(Tensor&& other) noexcept
     : data(std::move(other.data)), grad(std::move(other.grad)),
       shape(std::move(other.shape)), _op(std::move(other._op)),
-      _label(std::move(other._label)), _children(std::move(other._children)),
+      _label(std::move(other._label)), _children(std::move(other._children)), _device(other._device),
       _backward(std::move(other._backward)) {}
 
 Tensor& Tensor::operator=(Tensor&& other) noexcept {
@@ -76,6 +77,7 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
     _label = std::move(other._label);
     _children = std::move(other._children);
     _backward = std::move(other._backward);
+    _device = other._device;
     return *this;
 }
 

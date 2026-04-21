@@ -4,6 +4,14 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <array>
+
+enum Device {
+    CPU, CUDA, COUNT
+};
+constexpr auto DEVICE_STRINGS = std::to_array<std::string_view>({"cpu", "cuda"});
+static_assert(DEVICE_STRINGS.size() == static_cast<size_t>(Device::COUNT),
+              "FATAL: DEVICE_STRINGS array size does not match Device enum count!");
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
 public:
@@ -14,14 +22,16 @@ public:
     std::string _label;
     std::vector<std::shared_ptr<Tensor>> _children;
     std::vector<Tensor*> _cachedTopo;
+    Device _device;
 
     // _backward receives this tensor's grad and propagates it to _children
     std::function<void(const std::vector<float>&)> _backward;
 
     // Constructors
     Tensor();
-    explicit Tensor(float scalar, std::string label = "");
-    Tensor(std::vector<float> data, std::vector<size_t> shape, std::string label = "");
+
+    explicit Tensor(float scalar, Device device = CPU, std::string label = "");
+    Tensor(std::vector<float> data,  std::vector<size_t> shape, Device device = CPU, std::string label = "");
 
     // Rule of five
     Tensor(const Tensor& other);
