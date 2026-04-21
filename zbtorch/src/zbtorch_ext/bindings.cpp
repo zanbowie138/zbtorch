@@ -6,6 +6,8 @@
 
 namespace py = pybind11;
 
+void runCudaTest();
+
 PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
     m.doc() = "zbtorch C++ extension";
 
@@ -87,4 +89,6 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def("parameters", &MLP::parameters)
         .def("zero_grad",  &MLP::zero_grad)
         .def_readwrite("layers", &MLP::layers);
+
+    m.def("cuda_test", &runCudaTest);
 }

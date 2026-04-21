@@ -4,7 +4,7 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
     set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
 endif()
 
-project(zbtorch_ext LANGUAGES CXX)
+project(zbtorch_ext LANGUAGES CXX CUDA)
 
 # Find Dependencies (e.g., via vcpkg)
 find_package(OpenBLAS CONFIG REQUIRED)
