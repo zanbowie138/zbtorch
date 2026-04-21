@@ -4,18 +4,18 @@
 #include <memory>
 
 int main() {
-    auto a = std::make_shared<Tensor>(std::vector<float>{1, 2, 3,
+    auto a = make_tensor(std::vector<float>{1, 2, 3,
         4, 5, 6,
         7, 8, 9}, std::vector<size_t>{3, 3});
 
-    auto b = std::make_shared<Tensor>(std::vector<float>{
+    auto b = make_tensor(std::vector<float>{
         9, 8, 7,
         6, 5, 4,
         3, 2, 1}, std::vector<size_t>{3, 3});
 
     printf("Executing Matrix Multiplication using Tensor class...\n");
 
-    auto c = std::make_shared<Tensor>(a->matmul(*b));
+    auto c = matmul(a, b);
 
     std::cout << "Result Matrix C:\n" << *c << std::endl;
 

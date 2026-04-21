@@ -25,18 +25,13 @@ std::shared_ptr<Tensor> Neuron::forward(
         throw std::runtime_error("Neuron::forward: input size mismatch");
 
     if (w.empty())
-        return std::make_shared<Tensor>(b->tanh());
+        return make_tensor(b->tanh());
 
-    // Add first product to b so b is a real node in the graph (not a copy).
-    // Every intermediate must be heap-allocated before the next operator call
-    // because Tensor operators internally call shared_from_this().
-    auto acc = std::make_shared<Tensor>(*w[0] * *x[0]);
-    acc = std::make_shared<Tensor>(*acc + *b);
-    for (size_t i = 1; i < w.size(); ++i) {
-        auto product = std::make_shared<Tensor>(*w[i] * *x[i]);
-        acc = std::make_shared<Tensor>(*acc + *product);
-    }
-    return std::make_shared<Tensor>(acc->tanh());
+    auto acc = w[0] * x[0];
+    acc = acc + b;
+    for (size_t i = 1; i < w.size(); ++i)
+        acc = acc + w[i] * x[i];
+    return make_tensor(acc->tanh());
 }
 
 std::vector<std::shared_ptr<Tensor>> Neuron::parameters() const {

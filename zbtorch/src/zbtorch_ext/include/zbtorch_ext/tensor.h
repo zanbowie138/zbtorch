@@ -60,3 +60,38 @@ public:
 private:
     Tensor _make_output() const;
 };
+
+template <typename... Args>
+inline std::shared_ptr<Tensor> make_tensor(Args&&... args) {
+    return std::make_shared<Tensor>(std::forward<Args>(args)...);
+}
+
+// ---------------------------------------------------------------------------
+// Operators on shared_ptr<Tensor> — return shared_ptr to avoid make_shared
+// boilerplate at call sites when chaining operations.
+// ---------------------------------------------------------------------------
+
+inline std::shared_ptr<Tensor> operator+(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
+    return std::make_shared<Tensor>(*a + *b);
+}
+inline std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
+    return std::make_shared<Tensor>(*a * *b);
+}
+inline std::shared_ptr<Tensor> operator*(const std::shared_ptr<Tensor>& a, float s) {
+    return std::make_shared<Tensor>(*a * s);
+}
+inline std::shared_ptr<Tensor> operator*(float s, const std::shared_ptr<Tensor>& a) {
+    return std::make_shared<Tensor>(*a * s);
+}
+inline std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a) {
+    return std::make_shared<Tensor>(-*a);
+}
+inline std::shared_ptr<Tensor> operator-(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
+    return std::make_shared<Tensor>(*a - *b);
+}
+inline std::shared_ptr<Tensor> operator/(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
+    return std::make_shared<Tensor>(*a / *b);
+}
+inline std::shared_ptr<Tensor> matmul(const std::shared_ptr<Tensor>& a, const std::shared_ptr<Tensor>& b) {
+    return std::make_shared<Tensor>(a->matmul(*b));
+}
