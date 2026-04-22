@@ -10,11 +10,11 @@ public:
 
     explicit Neuron(int n_inputs);
 
-    std::shared_ptr<Tensor> forward(
+    [[nodiscard]] std::shared_ptr<Tensor> forward(
         const std::vector<std::shared_ptr<Tensor>>& x) const;
 
-    std::vector<std::shared_ptr<Tensor>> parameters() const;
-    void zero_grad();
+    [[nodiscard]] std::vector<std::shared_ptr<Tensor>> parameters() const;
+    void zero_grad() const;
 };
 
 class Layer {
@@ -23,11 +23,11 @@ public:
 
     Layer(int n_inputs, int n_outputs);
 
-    std::vector<std::shared_ptr<Tensor>> forward(
+    [[nodiscard]] std::vector<std::shared_ptr<Tensor>> forward(
         const std::vector<std::shared_ptr<Tensor>>& x) const;
 
-    std::vector<std::shared_ptr<Tensor>> parameters() const;
-    void zero_grad();
+    [[nodiscard]] std::vector<std::shared_ptr<Tensor>> parameters() const;
+    void zero_grad() const;
 };
 
 class MLP {
@@ -36,9 +36,9 @@ public:
 
     MLP(int n_inputs, const std::vector<int>& layer_sizes);
 
-    std::vector<std::shared_ptr<Tensor>> forward(
+    [[nodiscard]] std::vector<std::shared_ptr<Tensor>> forward(
         const std::vector<float>& x) const;
 
-    std::vector<std::shared_ptr<Tensor>> parameters() const;
-    void zero_grad();
+    [[nodiscard]] std::vector<std::shared_ptr<Tensor>> parameters() const;
+    void zero_grad() const;
 };

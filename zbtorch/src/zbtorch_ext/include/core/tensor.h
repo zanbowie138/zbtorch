@@ -3,15 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <ostream>
-#include <array>
-
-enum Device {
-    CPU, CUDA, COUNT
-};
-constexpr auto DEVICE_STRINGS = std::to_array<std::string_view>({"cpu", "cuda"});
-static_assert(DEVICE_STRINGS.size() == static_cast<size_t>(Device::COUNT),
-              "FATAL: DEVICE_STRINGS array size does not match Device enum count!");
+#include "../core/device.h"
 
 class Tensor : public std::enable_shared_from_this<Tensor> {
 public:

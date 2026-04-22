@@ -1,4 +1,4 @@
-#include <zbtorch_ext/tensor.h>
+#include <core/tensor.h>
 #include <cstdio>
 #include <iostream>
 #include <memory>

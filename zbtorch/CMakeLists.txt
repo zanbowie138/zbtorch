@@ -6,17 +6,12 @@ endif()
 
 project(zbtorch_ext LANGUAGES CXX CUDA)
 
-set (CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
 
 # Find Dependencies (e.g., via vcpkg)
 find_package(OpenBLAS CONFIG REQUIRED)
 
-option(ZBTORCH_USE_CUDA "Build CUDA kernels" ON)
-
-if (ZBTORCH_USE_CUDA)
-    enable_language(CUDA)
-    find_package(CUDAToolkit REQUIRED)
-endif()
+find_package(CUDAToolkit REQUIRED)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
 find_package(pybind11 CONFIG REQUIRED)

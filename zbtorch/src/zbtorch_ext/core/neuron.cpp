@@ -1,4 +1,4 @@
-#include <zbtorch_ext/neuron.h>
+#include <core/neuron.h>
 #include <random>
 #include <stdexcept>
 
@@ -11,7 +11,7 @@ static float random_uniform_11() {
 // ---------------------------------------------------------------------------
 // Neuron
 // ---------------------------------------------------------------------------
-Neuron::Neuron(int n_inputs) {
+Neuron::Neuron(const int n_inputs) {
     w.reserve(n_inputs);
     for (int i = 0; i < n_inputs; ++i)
         w.push_back(std::make_shared<Tensor>(random_uniform_11()));
@@ -40,7 +40,7 @@ std::vector<std::shared_ptr<Tensor>> Neuron::parameters() const {
     return params;
 }
 
-void Neuron::zero_grad() {
+void Neuron::zero_grad() const {
     for (auto& p : w)
         p->grad.assign(p->data.size(), 0.0f);
     b->grad.assign(b->data.size(), 0.0f);
@@ -74,7 +74,7 @@ std::vector<std::shared_ptr<Tensor>> Layer::parameters() const {
     return params;
 }
 
-void Layer::zero_grad() {
+void Layer::zero_grad() const {
     for (auto& n : neurons)
         n.zero_grad();
 }
@@ -114,7 +114,7 @@ std::vector<std::shared_ptr<Tensor>> MLP::parameters() const {
     return params;
 }
 
-void MLP::zero_grad() {
+void MLP::zero_grad() const {
     for (auto& layer : layers)
         layer.zero_grad();
 }

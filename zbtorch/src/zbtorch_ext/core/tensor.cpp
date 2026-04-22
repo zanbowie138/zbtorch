@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_set>
-#include <zbtorch_ext/tensor.h>
+#include <core/tensor.h>
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -28,7 +28,9 @@ Tensor Tensor::_make_output() const {
 // ---------------------------------------------------------------------------
 
 Tensor::Tensor()
-    : _backward([](const std::vector<float>&) {}) {}
+    : _device(CPU), _backward([](const std::vector<float> &) {
+    }) {
+}
 
 Tensor::Tensor(float scalar, Device device, std::string label)
     : data({scalar}), grad({0.0f}), shape({1}), _label(std::move(label)), _device(device),
@@ -337,7 +339,7 @@ std::vector<Tensor *> Tensor::buildTopo() {
     std::vector<Tensor*> topo;
     std::unordered_set<const Tensor*> visited;
     std::function<void(Tensor*)> build_topo = [&](Tensor* v) {
-        if (!visited.count(v)) {
+        if (!visited.contains(v)) {
             visited.insert(v);
             for (const auto& child : v->_children)
                 build_topo(child.get());
