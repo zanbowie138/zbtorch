@@ -1,28 +1,32 @@
-# Core library
+# Core library — compiled by MSVC, no CUDA headers visible
 add_library(zbtorch_core STATIC
-        core/tensor.cpp
-        core/neuron.cpp
-        include/core/device.h
+    core/storage.cpp
+    core/tensor.cpp
+    core/neuron.cpp
+    core/ops.cpp
+    core/cpu/cpu_alloc.cpp
+    core/cpu/cpu_ops.cpp
+    core/cuda/cuda_alloc.cpp
+    core/cuda/cuda_ops.cpp
 )
 target_include_directories(zbtorch_core PUBLIC include)
 target_link_libraries(zbtorch_core PUBLIC
-        OpenBLAS::OpenBLAS
-        CUDA::cublas
-        CUDA::cudart
+    OpenBLAS::OpenBLAS
 )
 
 # Python Module
 pybind11_add_module(_C bindings.cpp)
 target_include_directories(_C PUBLIC include)
 target_link_libraries(_C PRIVATE
-        zbtorch_core
-        pybind11::module
+    zbtorch_core
+    pybind11::module
+    CUDA::cudart
 )
 
 # Standalone Testing Module
 add_executable(zbtorch_standalone test/test.cpp)
 target_link_libraries(zbtorch_standalone PRIVATE
-        zbtorch_core
+    zbtorch_core
 )
 
 install(TARGETS _C

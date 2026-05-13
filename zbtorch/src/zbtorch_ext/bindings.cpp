@@ -10,8 +10,6 @@
 
 namespace py = pybind11;
 
-void runCudaTest();
-
 PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
     m.doc() = "zbtorch C++ extension";
 
@@ -50,8 +48,22 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
                 return std::make_unique<Tensor>(data, shape, parseDevice(device), label);
              }), py::arg("data"), py::arg("shape"), py::arg("device") = py::str("cpu"), py::arg("label") = "")
 
-        .def_readwrite("data", &Tensor::data)
-        .def_readwrite("grad", &Tensor::grad)
+        .def_property("data",
+            [](const Tensor& t) {
+                auto v = t.cpu_data();
+                return py::array_t<float>({static_cast<py::ssize_t>(v.size())}, v.data());
+            },
+            [](Tensor& t, const py::array_t<float, py::array::c_style | py::array::forcecast>& arr) {
+                auto buf = arr.request();
+                std::vector<float> v(static_cast<float*>(buf.ptr),
+                                     static_cast<float*>(buf.ptr) + buf.size);
+                t.set_cpu_data(v);
+            })
+        .def_property_readonly("grad",
+            [](const Tensor& t) {
+                auto v = t.cpu_grad();
+                return py::array_t<float>({static_cast<py::ssize_t>(v.size())}, v.data());
+            })
         .def_readwrite("shape", &Tensor::shape)
         .def_readwrite("_op", &Tensor::_op)
         .def_readwrite("_label", &Tensor::_label)
@@ -92,9 +104,10 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         .def("relu",    &Tensor::relu)
         .def("tanh",    &Tensor::tanh)
         .def("sigmoid", &Tensor::sigmoid)
-        .def_property_readonly("device", [](const Tensor& t) { return getDeviceName(t._device); })
-        .def("to",   [](const Tensor& t, const py::object& d) { Tensor r(t); r._device = parseDevice(d); return r; },
+        .def_property_readonly("device", [](const Tensor& t) { return getDeviceName(t.device()); })
+        .def("to", [](const Tensor& t, const py::object& d) { return t.to(parseDevice(d)); },
              py::arg("device"))
+        .def("zero_grad", &Tensor::zero_grad)
         // Topology
         .def("build_topo", [](Tensor& t) -> py::set {
             py::set result;

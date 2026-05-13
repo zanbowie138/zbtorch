@@ -41,9 +41,8 @@ std::vector<std::shared_ptr<Tensor>> Neuron::parameters() const {
 }
 
 void Neuron::zero_grad() const {
-    for (auto& p : w)
-        p->grad.assign(p->data.size(), 0.0f);
-    b->grad.assign(b->data.size(), 0.0f);
+    for (auto& p : w) p->zero_grad();
+    b->zero_grad();
 }
 
 // ---------------------------------------------------------------------------
