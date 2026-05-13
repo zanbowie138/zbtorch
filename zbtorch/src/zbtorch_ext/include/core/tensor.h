@@ -41,9 +41,9 @@ public:
 
     // Host-side accessors — for Python bindings and debugging.
     // On CUDA these would do a device→host transfer (not yet implemented).
-    std::vector<float> cpu_data() const;
-    std::vector<float> cpu_grad() const;
-    void set_cpu_data(const std::vector<float>& v);
+    std::vector<float> data() const;
+    std::vector<float> grad() const;
+    void set_data(const std::vector<float>& v);
     void zero_grad();
 
     // Arithmetic operators

@@ -87,24 +87,35 @@ Tensor Tensor::to(Device d) const {
 // Host-side accessors
 // ---------------------------------------------------------------------------
 
-std::vector<float> Tensor::cpu_data() const {
+std::vector<float> Tensor::data() const {
     if (!data_.valid()) return {};
-    if (data_.device != CPU)
-        throw std::runtime_error("cpu_data: tensor is on a non-CPU device");
-    return std::vector<float>(data_.data(), data_.data() + data_.size);
+    if (data_.device == CPU) {
+        return std::vector<float>(data_.data(), data_.data() + data_.size);
+    }
+
+    auto out = copy_storage(data_, CPU);
+    return std::vector(out.data(), out.data() + out.size);
 }
 
-std::vector<float> Tensor::cpu_grad() const {
+std::vector<float> Tensor::grad() const {
     if (!grad_.valid()) return {};
-    if (grad_.device != CPU)
-        throw std::runtime_error("cpu_grad: tensor is on a non-CPU device");
-    return std::vector<float>(grad_.data(), grad_.data() + grad_.size);
+
+    if (data_.device == CPU) {
+        return std::vector<float>(grad_.data(), grad_.data() + grad_.size);
+    }
+
+    auto out = copy_storage(grad_, CPU);
+    return std::vector(out.data(), out.data() + out.size);
 }
 
-void Tensor::set_cpu_data(const std::vector<float>& v) {
-    if (data_.device != CPU)
-        throw std::runtime_error("set_cpu_data: tensor is on a non-CPU device");
-    std::copy(v.begin(), v.end(), data_.data());
+void Tensor::set_data(const std::vector<float>& v) {
+    if (data_.device == CPU)
+        std::copy(v.begin(), v.end(), data_.data());
+
+    auto s = make_cpu_storage(v.size());
+    std::copy(v.begin(), v.end(), s.data());
+    auto newData = copy_storage(s, data_.device);
+    data_ = std::move(newData);
 }
 
 void Tensor::zero_grad() {
@@ -413,8 +424,8 @@ void Tensor::backward(bool cache) {
 
 std::string Tensor::repr() const {
     std::ostringstream ss;
-    auto d = cpu_data();
-    auto g = cpu_grad();
+    auto d = data();
+    auto g = grad();
     ss << "Tensor(data=[";
     for (size_t i = 0; i < d.size(); i++) {
         if (i) ss << ", ";

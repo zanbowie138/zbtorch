@@ -19,7 +19,3 @@ static Device parseDevice(const py::object& obj) {
             DEVICE_STRINGS | std::views::join_with(std::string_view(", ")) | std::ranges::to<std::string>())
     );
 }
-
-static std::string_view getDeviceName(const Device d) {
-    return DEVICE_STRINGS[static_cast<int>(d)];
-}

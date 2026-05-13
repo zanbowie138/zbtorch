@@ -50,18 +50,18 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
 
         .def_property("data",
             [](const Tensor& t) {
-                auto v = t.cpu_data();
+                auto v = t.data();
                 return py::array_t<float>({static_cast<py::ssize_t>(v.size())}, v.data());
             },
             [](Tensor& t, const py::array_t<float, py::array::c_style | py::array::forcecast>& arr) {
                 auto buf = arr.request();
                 std::vector<float> v(static_cast<float*>(buf.ptr),
                                      static_cast<float*>(buf.ptr) + buf.size);
-                t.set_cpu_data(v);
+                t.set_data(v);
             })
         .def_property_readonly("grad",
             [](const Tensor& t) {
-                auto v = t.cpu_grad();
+                auto v = t.grad();
                 return py::array_t<float>({static_cast<py::ssize_t>(v.size())}, v.data());
             })
         .def_readwrite("shape", &Tensor::shape)
@@ -84,17 +84,19 @@ PYBIND11_MODULE(_C, m, py::mod_gil_not_used()) {
         // Arithmetic
         .def("__add__",      &Tensor::operator+)
         .def("__radd__",     [](const std::shared_ptr<Tensor>& t, float o) {
-                                 return *std::make_shared<Tensor>(o) + *t; })
+                                 return *std::make_shared<Tensor>(o, t->device()) + *t; })
         .def("__mul__",      py::overload_cast<const Tensor&>(&Tensor::operator*, py::const_))
         .def("__mul__",      py::overload_cast<float>(&Tensor::operator*, py::const_))
         .def("__rmul__",     [](const Tensor& t, float o) { return t * o; })
         .def("__neg__",      [](const Tensor& t) { return -t; })
         .def("__sub__",      py::overload_cast<const Tensor&>(&Tensor::operator-, py::const_))
         .def("__rsub__",     [](const std::shared_ptr<Tensor>& t, float o) {
-                                 return *std::make_shared<Tensor>(o) + (-*t); })
+                                 auto neg = std::make_shared<Tensor>(-*t);
+                                 return *std::make_shared<Tensor>(o, t->device()) + *neg; })
         .def("__truediv__",  &Tensor::operator/)
         .def("__rtruediv__", [](const std::shared_ptr<Tensor>& t, float o) {
-                                 return *std::make_shared<Tensor>(o) * t->pow(-1.0f); })
+                                 auto inv = std::make_shared<Tensor>(t->pow(-1.0f));
+                                 return *std::make_shared<Tensor>(o, t->device()) * *inv; })
         .def("__pow__",      &Tensor::pow)
         .def("__matmul__",   &Tensor::matmul)
         .def("matmul",       &Tensor::matmul)

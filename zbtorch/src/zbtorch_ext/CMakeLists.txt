@@ -1,4 +1,3 @@
-# Core library — compiled by MSVC, no CUDA headers visible
 add_library(zbtorch_core STATIC
     core/storage.cpp
     core/tensor.cpp
@@ -7,11 +6,12 @@ add_library(zbtorch_core STATIC
     core/cpu/cpu_alloc.cpp
     core/cpu/cpu_ops.cpp
     core/cuda/cuda_alloc.cpp
-    core/cuda/cuda_ops.cpp
+    core/cuda/cuda_ops.cu
 )
 target_include_directories(zbtorch_core PUBLIC include)
 target_link_libraries(zbtorch_core PUBLIC
     OpenBLAS::OpenBLAS
+    CUDA::cudart
 )
 
 # Python Module
